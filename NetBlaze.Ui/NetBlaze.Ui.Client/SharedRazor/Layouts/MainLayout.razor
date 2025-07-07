@@ -1,0 +1,26 @@
+﻿@using NetBlaze.Ui.Client.Components.Concrete.CultureSelector
+@inherits LayoutComponentBase
+
+<MudThemeProvider Theme="@NetBlazeTheme" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudRTLProvider RightToLeft="@_rightToLeft">
+    <MudLayout class="MainLayout-container">
+        <MudAppBar Elevation="1">
+            <MudIconButton Icon="@Icons.Material.Filled.Dashboard" Color="Color.Primary" Edge="Edge.Start" OnClick="@ToggleDrawer" />
+            <MudText Typo="Typo.h6" Color="Color.Primary">Central Exam Server</MudText>
+            <div class="flex-grow-1" />
+            <MudSpacer />
+            <CultureSelector />
+        </MudAppBar>
+        <MudMainContent class="MainLayout-content">
+            <div class="p-0 Body-container">
+                @Body
+            </div>
+            <LayoutFooter />
+			<ErrorBar />
+        </MudMainContent>
+    </MudLayout>
+</MudRTLProvider>

@@ -1,0 +1,80 @@
+﻿@using NetBlaze.SharedKernel.Enums
+
+<EditForm Model="addSampleRequestDto" OnValidSubmit="SubmitAsync">
+    <DataAnnotationsValidator />
+    <MudDialog>
+        <DialogContent>
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="addSampleRequestDto.Name"
+                                      For="@(() => addSampleRequestDto.Name)"
+                                      Label="Name"
+                                      Variant="Variant.Outlined"
+                                      Immediate
+                                      Class="mb-3" />
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="addSampleRequestDto.Description"
+                                      For="@(() => addSampleRequestDto.Description)"
+                                      Label="Description"
+                                      Lines="4"
+                                      Variant="Variant.Outlined"
+                                      Immediate
+                                      Class="mb-3" />
+                    </MudItem>
+                
+                    <MudItem xs="12" md="6">
+                        <MudNumericField @bind-Value="addSampleRequestDto.IntegerValue"
+                                         For="@(() => addSampleRequestDto.IntegerValue)"
+                                         Label="Integer Value"
+                                         Variant="Variant.Outlined"
+                                         Immediate
+                                         Class="mb-3" />
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudNumericField @bind-Value="addSampleRequestDto.DecimalValue"
+                                         For="@(() => addSampleRequestDto.DecimalValue)"
+                                         Label="Decimal Value"
+                                         Format="F2"
+                                         Variant="Variant.Outlined"
+                                         Immediate
+                                         Class="mb-3" />
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="addSampleRequestDto.UniqueIdentifier"
+                                      For="@(() => addSampleRequestDto.UniqueIdentifier)"
+                                      Label="Unique Identifier"
+                                      Variant="Variant.Outlined"
+                                      Immediate
+                                      Class="mb-3" />
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudSelect @bind-Value="addSampleRequestDto.Status"
+                                   For="@(() => addSampleRequestDto.Status)"
+                                   Label="Status"
+                                   Variant="Variant.Outlined"
+                                   Class="mb-3">
+                            @foreach (var status in Enum.GetValues<SampleStatus>())
+                            {
+                                <MudSelectItem Value="status">@status.ToString()</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                </MudGrid>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="Cancel">
+                Cancel
+            </MudButton>
+            <MudButton ButtonType="ButtonType.Submit" 
+                       Color="Color.Primary" 
+                       Variant="Variant.Filled">
+                Add Sample
+            </MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>

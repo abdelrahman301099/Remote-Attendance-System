@@ -1,0 +1,14 @@
+﻿<MudDialog TitleClass="fw-bold font-weight-bold" Gutters="true" Class="GenericDialog-dialog">
+    <TitleContent>
+        <MudText Typo="Typo.h5">
+            @Title
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @(new MarkupString(Content))
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Outlined" Color="Color.Secondary">@CancelText</MudButton>
+        <MudButton Variant="Variant.Filled" StartIcon="@SubmitButtonStartIcon" Color="@SubmitButtonColor" OnClick="Submit">@SubmitText</MudButton>
+    </DialogActions>
+</MudDialog>

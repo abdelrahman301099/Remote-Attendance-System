@@ -1,0 +1,66 @@
+﻿@using NetBlaze.SharedKernel.Dtos.Sample.Responses
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">Sample Management</MudText>
+
+    <MudPaper Class="pa-4 mb-4">
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenAddDialogAsync">
+                    Add New Sample
+                </MudButton>
+            </MudItem>
+            <MudItem xs="12" md="6" Class="d-flex justify-end">
+                <MudButton Variant="Variant.Outlined"
+                           StartIcon="@Icons.Material.Filled.Refresh"
+                           OnClick="LoadSamplesAsync"
+                           Disabled="@_isLoading">
+                    Refresh
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <MudPaper Width="100%">
+        @if (_isLoading)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+        }
+
+        <MudList T="GetListedSampleResponseDto">
+            @if (_samples != null && _samples.Any())
+            {
+                @foreach (var sample in _samples)
+                {
+                    <MudListItem>
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <div>
+                                <MudText Typo="Typo.subtitle1">@sample.Name</MudText>
+                            </div>
+                            <div>
+                                <MudIconButton Size="@Size.Small"
+                                               Icon="@Icons.Material.Filled.Edit"
+                                               Color="Color.Primary"
+                                               OnClick="@(() => OpenUpdateDialogAsync(sample))" />
+                                <MudIconButton Size="@Size.Small"
+                                               Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               OnClick="@(() => DeleteSampleAsync(sample.Id))" />
+                            </div>
+                        </div>
+                    </MudListItem>
+                    <MudDivider />
+                }
+            }
+            else if (!_isLoading)
+            {
+                <MudListItem>
+                    <MudAlert Severity="Severity.Info">No samples found. Click "Add New Sample" to create your first sample.</MudAlert>
+                </MudListItem>
+            }
+        </MudList>
+    </MudPaper>
+</MudContainer>
