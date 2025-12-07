@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using NetBlaze.Domain.Entities.Identity;
 using NetBlaze.SharedKernel.HelperUtilities.Constants;
@@ -62,7 +62,7 @@ namespace NetBlaze.Infrastructure.Data.Configurations.EntitiesConfigurations.Ide
             builder
                 .Property(e => e.PhoneNumber)
                 .HasMaxLength(CommonStringLength.ExtendedText)
-                .IsRequired();
+                .IsRequired(false);
 
             builder
                 .Property(e => e.CreatedBy)

@@ -5,19 +5,19 @@ namespace NetBlaze.Domain.Common
 {
     public abstract class BaseAuditableEntity
     {
-        public DateTimeOffset CreatedAt { get; private set; }
+        public DateTimeOffset CreatedAt { get;  set; }
 
         [MaxLength(CommonStringLength.LongContentText)]
-        public string? CreatedBy { get; private set; }
+        public string? CreatedBy { get;  set; }
 
-        public DateTimeOffset? LastModifiedAt { get; private set; }
-
-        [MaxLength(CommonStringLength.LongContentText)]
-        public string? LastModifiedBy { get; private set; }
-
-        public DateTimeOffset? DeletedAt { get; private set; }
+        public DateTimeOffset? LastModifiedAt { get;  set; }
 
         [MaxLength(CommonStringLength.LongContentText)]
-        public string? DeletedBy { get; private set; }
+        public string? LastModifiedBy { get;  set; }
+
+        public DateTimeOffset? DeletedAt { get;  set; }
+
+        [MaxLength(CommonStringLength.LongContentText)]
+        public string? DeletedBy { get;  set; }
     }
 }

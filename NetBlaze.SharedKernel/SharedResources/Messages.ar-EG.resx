@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
 	<!-- 
 		Microsoft ResX Schema
@@ -125,7 +125,61 @@
 <data name="ErrorOccurredInServer" xml:space="preserve">
 	<value>حدث خطأ في الخادم، الرجاء المحاولة مرة أخرى</value>
 </data>
-<data name="SampleNotModified" xml:space="preserve">
-	<value>لم تطرأ أي تغييرات على العينة</value>
-</data>
+  <data name="SampleNotModified" xml:space="preserve">
+    <value>لم تطرأ أي تغييرات على العينة</value>
+  </data>
+  <data name="AttendanceAddedSuccessfully" xml:space="preserve">
+    <value>تمت إضافة الحضور بنجاح</value>
+  </data>
+  <data name="AttendanceAddFailed" xml:space="preserve">
+    <value>فشل إضافة الحضور</value>
+  </data>
+  <data name="AttendanceDeletedSuccessfully" xml:space="preserve">
+    <value>تم حذف الحضور بنجاح</value>
+  </data>
+  <data name="AttendanceNotModified" xml:space="preserve">
+    <value>لم يتم تعديل الحضور</value>
+  </data>
+  <data name="AttendanceNotFound" xml:space="preserve">
+    <value>الحضور غير موجود</value>
+  </data>
+  <data name="UserNotFound" xml:space="preserve">
+    <value>المستخدم غير موجود</value>
+  </data>
+  <data name="CompanyPolicyNotAssignedToUser" xml:space="preserve">
+    <value>لا توجد سياسة شركة مخصصة للمستخدم</value>
+  </data>
+  <data name="InvalidEmail" xml:space="preserve">
+    <value>البريد الإلكتروني غير صالح</value>
+  </data>
+  <data name="InvalidPassword" xml:space="preserve">
+    <value>كلمة المرور غير صحيحة</value>
+  </data>
+  <data name="UserRegisteredSuccessfully" xml:space="preserve">
+    <value>تم تسجيل المستخدم بنجاح</value>
+  </data>
+  <data name="ErrorAssigningRole" xml:space="preserve">
+    <value>حدث خطأ أثناء تعيين الدور</value>
+  </data>
+  <data name="ResetCodeSentSuccessfully" xml:space="preserve">
+    <value>تم إرسال رمز إعادة التعيين بنجاح</value>
+  </data>
+  <data name="InvalidRequest" xml:space="preserve">
+    <value>طلب غير صالح</value>
+  </data>
+  <data name="ResetCodeExpiredOrNotFound" xml:space="preserve">
+    <value>انتهت صلاحية رمز التحقق أو غير موجود</value>
+  </data>
+  <data name="InvalidResetData" xml:space="preserve">
+    <value>بيانات إعادة التعيين غير صالحة</value>
+  </data>
+	<data name="PasswordResetSuccess" xml:space="preserve">
+    <value>تم تغيير كلمة المرور بنجاح</value>
+  </data>
+	<data name="UserDeletedAlready" xml:space="preserve">
+    <value>هذا المستخدم تم حذفه بالفعل</value>
+  </data>
+	<data name="TodayIsVacation" xml:space="preserve">
+    <value>اليوم اجازة</value>
+  </data>
 </root>

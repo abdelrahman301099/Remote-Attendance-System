@@ -1,32 +1,42 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 
 namespace NetBlaze.Domain.Entities.Identity
 {
     public class User : IdentityUser<long>
     {
         // Properties
+  
+        public string DisplayName { get;  set; } = null!;
 
-        public string DisplayName { get; private set; } = null!;
+        public DateTimeOffset CreatedAt { get;  set; } = DateTimeOffset.UtcNow;
 
-        public DateTimeOffset CreatedAt { get; private set; }
+        public string? CreatedBy { get;  set; }
 
-        public string? CreatedBy { get; private set; }
+        public DateTimeOffset? LastModifiedAt { get;  set; }
 
-        public DateTimeOffset? LastModifiedAt { get; private set; }
+        public string? LastModifiedBy { get;  set; }
 
-        public string? LastModifiedBy { get; private set; }
+        public DateTimeOffset? DeletedAt { get;  set; }
 
-        public DateTimeOffset? DeletedAt { get; private set; }
+        public string? DeletedBy { get;  set; }
 
-        public string? DeletedBy { get; private set; }
+        public bool IsActive { get;  set; } = true;
 
-        public bool IsActive { get; private set; } = true;
+        public bool IsDeleted { get; set; } = false;
 
-        public bool IsDeleted { get; private set; }
+        public string? ManagerId { get; set; }
 
+        public User? Manager { get; set; }
 
         // Navigational Properties
+        public long? UserDetailsId { get; set; }
 
-        public ICollection<UserRole> UserRoles { get; private set; } = [];
+        public virtual UserDetails? UserDetails { get; set; }
+
+        public virtual ICollection<UserRole> UserRoles { get;  set; } = new HashSet<UserRole>();
+
+        public int? DepartmentId { get; set; }
+
+        public virtual Department? Department { get; set; }
     }
 }
