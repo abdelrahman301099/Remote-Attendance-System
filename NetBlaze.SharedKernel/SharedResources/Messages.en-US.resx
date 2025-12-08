@@ -182,5 +182,8 @@
 	<data name="TodayIsVacation" xml:space="preserve">
     <value>Today Is Vacation</value>
 </data>
+	<data name="UserUpdated" xml:space="preserve">
+    <value>User Updated Successfully</value>
+</data>
 	
 </root>

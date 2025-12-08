@@ -7,6 +7,7 @@ using NetBlaze.Domain.Entities.Identity;
 using NetBlaze.SharedKernel.Dtos.ResetPassword.Request;
 using NetBlaze.SharedKernel.Dtos.ResetPassword.Response;
 using NetBlaze.SharedKernel.HelperUtilities.General;
+using NetBlaze.SharedKernel.SharedResources;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -33,9 +34,7 @@ namespace NetBlaze.Application.Services
             
         }
 
-        public async Task<ApiResponse<bool>> SendPasswordResetEmailAsync(
-            string email,
-            CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<bool>> SendPasswordResetEmailAsync(string email,CancellationToken cancellationToken = default)
         {
            
                 var user = await _userManager.FindByEmailAsync(email);
@@ -43,10 +42,10 @@ namespace NetBlaze.Application.Services
                 {
                     
                     
-                    return ApiResponse<bool>.ReturnSuccessResponse(
-                        true,
-                        "If the email exists, a reset code has been sent",
-                        HttpStatusCode.OK);
+                    return ApiResponse<bool>.ReturnFailureResponse(
+                        
+                        Messages.UserNotFound,
+                        HttpStatusCode.NotFound);
                 }
 
               
@@ -86,10 +85,7 @@ namespace NetBlaze.Application.Services
            
         }
 
-        public async Task<ApiResponse<bool>> VerifyResetCodeAsync(
-            string email,
-            string code,
-            CancellationToken cancellationToken = default)
+        public async Task<ApiResponse<bool>> VerifyResetCodeAsync(string email, string code,CancellationToken cancellationToken = default)
         {
             
                 var user = await _userManager.FindByEmailAsync(email);

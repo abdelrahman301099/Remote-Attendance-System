@@ -10,18 +10,17 @@ namespace NetBlaze.Application.Services
     public class EmailSender : IEmailSender
     {
         private readonly IConfiguration _configuration;
-        private readonly ILogger<EmailSender> _logger;
+      
 
         public EmailSender(IConfiguration configuration, ILogger<EmailSender> logger)
         {
             _configuration = configuration;
-            _logger = logger;
+            
         }
 
         public async Task SendPasswordResetCodeAsync(string email, string code, CancellationToken cancellationToken = default)
         {
-            try
-            {
+           
                 var section = _configuration.GetSection("EmailSettings");
                 var host = section["Host"];
                 var portStr = section["Port"];
@@ -35,7 +34,7 @@ namespace NetBlaze.Application.Services
                     string.IsNullOrWhiteSpace(password) ||
                     string.IsNullOrWhiteSpace(from))
                 {
-                    _logger.LogError("Email configuration is incomplete");
+                   
                     throw new InvalidOperationException("Email settings are not properly configured");
                 }
 
@@ -56,14 +55,9 @@ namespace NetBlaze.Application.Services
                 };
 
                 await smtp.SendMailAsync(message, cancellationToken);
-                _logger.LogInformation("Password reset code sent to {Email}", email);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to send password reset email to {Email}", email);
-                throw;
-            }
-        }
+            
+        
 
         private string GetEmailBody(string code)
         {

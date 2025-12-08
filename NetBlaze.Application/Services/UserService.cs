@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using NetBlaze.Application.Interfaces.General;
 using NetBlaze.Application.Interfaces.ServicesInterfaces;
+using NetBlaze.Application.Mappings;
 using NetBlaze.Domain.Entities.Identity;
 using NetBlaze.SharedKernel.Dtos.Attendance.Request;
 using NetBlaze.SharedKernel.Dtos.User.RequestDTOs;
@@ -16,8 +18,7 @@ namespace NetBlaze.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<User> _user;
-
-
+        
 
         public UserService(UserManager<User> userManager, IUnitOfWork unitOfWork  ) {
         
@@ -50,6 +51,7 @@ namespace NetBlaze.Application.Services
             user.IsDeleted = true;
             user.DeletedAt = DateTimeOffset.UtcNow;
             user.DeletedBy = "System"; 
+            user.IsActive = false;
 
             _unitOfWork.Repository.Update(user);
             await _unitOfWork.Repository.CompleteAsync(cancellationToken);
@@ -61,26 +63,49 @@ namespace NetBlaze.Application.Services
         }
 
 
-        public IAsyncEnumerable<UserResponseDTO> GetAllUsersAsync()
+       
+        public async Task<ApiResponse<UserResponseDTO>> UpdateUserAsync(UpdateUserDTO updateUserDTO, CancellationToken cancellationToken)
         {
-            var users = _unitOfWork.Repository.GetMultipleStream<User, UserResponseDTO>(
-                 true,
-                _ => true,
-                x => new UserResponseDTO
-                {
-                    UserName = x.UserName,
-                    DisplayName = x.DisplayName,
-                    UserEmail = x.Email,
+            var user = _unitOfWork.Repository.GetById<User>(false, updateUserDTO.UserId);
 
-                    
-                    RoleId = x.UserRoles
-                        .Select(r => r.RoleId)
-                        .FirstOrDefault()
-                }
-            );
+            
+            if (user == null)
+                return ApiResponse<UserResponseDTO>.ReturnFailureResponse(Messages.UserNotFound, HttpStatusCode.NotFound);
 
-            return users;
+            user.UserName = updateUserDTO.UserName;
+            user.DisplayName = updateUserDTO.Displayname;
+            user.Email = updateUserDTO.UserEmail;
+
+            await _unitOfWork.Repository.CompleteAsync();
+
+            var NewUser = new UserResponseDTO
+            {
+                UserName = updateUserDTO.UserName,
+                UserEmail = updateUserDTO.UserEmail,
+                DisplayName = updateUserDTO.Displayname
+
+            };
+
+            return ApiResponse<UserResponseDTO>.ReturnSuccessResponse(NewUser, Messages.UserUpdated, HttpStatusCode.OK);
+
+            
+             
         }
 
+          public async Task<ApiResponse<object>> GetAllUsersAsync(int pageNumber, int pageSize)
+        {
+            var usersList = _unitOfWork.Repository.GetQueryable<User>();
+
+            usersList.PaginatedListAsync(pageNumber, pageSize);
+
+            var users = usersList.Select(u => new UserResponseDTO
+            {
+                DisplayName = u.DisplayName,
+                UserName = u.UserName,
+                UserEmail = u.Email
+            });
+
+            return ApiResponse<object>.ReturnSuccessResponse(null, Messages.InvalidEmail, HttpStatusCode.OK);
+        }
     }
 }

@@ -1,5 +1,6 @@
 using NetBlaze.Application.Interfaces.General;
 using NetBlaze.Application.Interfaces.ServicesInterfaces;
+using NetBlaze.Application.Mappings;
 using NetBlaze.Domain.Entities;
 using NetBlaze.SharedKernel.Dtos.Vacations.Request;
 using NetBlaze.SharedKernel.Dtos.Vacations.Response;
@@ -18,20 +19,23 @@ namespace NetBlaze.Application.Services
             _unitOfWork = unitOfWork;
         }
 
-        public IAsyncEnumerable<VacationResponseDTO> GetListedVacations()
+        public async Task<ApiResponse<IQueryable<VacationResponseDTO>>> GetListedVacations(int pageNumber, int pageSize)
         {
-            return _unitOfWork.Repository.GetMultipleStream<Vacations, VacationResponseDTO>(
-                true,
-                x => true,
-                x => new VacationResponseDTO
-                {
-                    Id = x.Id,
-                    DayName = x.DayName,
-                    DayDate = x.DayDate,
-                    VacationDuration = x.VacationDuration,
-                    Clarification = x.Clarification
-                }
-            );
+            
+
+            var list = _unitOfWork.Repository.GetQueryable<Vacations>();
+
+            var vacationResponse = list.Select(v => new VacationResponseDTO
+            {
+                DayName = v.DayName,
+                DayDate = v.DayDate,
+                VacationDuration = v.VacationDuration,
+                Clarification = v.Clarification   
+            });
+
+            list.PaginatedListAsync(pageNumber, pageSize);
+            
+            return ApiResponse<IQueryable< VacationResponseDTO>>.ReturnSuccessResponse(vacationResponse, "Returned Successfully", HttpStatusCode.OK);
         }
 
         public async Task<ApiResponse<VacationResponseDTO>> GetVacationByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -48,7 +52,7 @@ namespace NetBlaze.Application.Services
                     Clarification = x.Clarification
                 },
                 cancellationToken
-            ).ConfigureAwait(false);
+            );
 
             if (vacation == null)
             {
@@ -68,9 +72,9 @@ namespace NetBlaze.Application.Services
                 Clarification = request.Clarification ?? string.Empty
             };
 
-            await _unitOfWork.Repository.AddAsync<Vacations, int>(entity, cancellationToken).ConfigureAwait(false);
+            await _unitOfWork.Repository.AddAsync<Vacations, int>(entity, cancellationToken);
 
-            var rows = await _unitOfWork.Repository.CompleteAsync(cancellationToken).ConfigureAwait(false);
+            var rows = await _unitOfWork.Repository.CompleteAsync(cancellationToken);
 
             if (rows > 0)
             {
@@ -90,13 +94,14 @@ namespace NetBlaze.Application.Services
 
         public async Task<ApiResponse<object>> UpdateVacationAsync(UpdateVacationRequestDTO request, CancellationToken cancellationToken = default)
         {
-            var target = await _unitOfWork.Repository.GetSingleAsync<Vacations>(false, x => x.Id == request.Id, cancellationToken).ConfigureAwait(false);
+            var target = await _unitOfWork.Repository.GetSingleAsync<Vacations>(false, x => x.Id == request.Id, cancellationToken);
 
             if (target == null)
             {
                 return ApiResponse<object>.ReturnFailureResponse(Messages.SampleNotFound, HttpStatusCode.NotFound);
             }
 
+            //TODO:CREATE HELPER FUNCTION TO DO 
             if (!string.IsNullOrWhiteSpace(request.DayName)) target.DayName = request.DayName;
             if (request.DayDate.HasValue) target.DayDate = request.DayDate.Value;
             if (request.VacationDuration.HasValue) target.VacationDuration = request.VacationDuration.Value;
@@ -114,7 +119,8 @@ namespace NetBlaze.Application.Services
 
         public async Task<ApiResponse<object>> DeleteVacationAsync(DeleteVacationRequestDTO request, CancellationToken cancellationToken = default)
         {
-            var target = await _unitOfWork.Repository.GetSingleAsync<Vacations>(false, x => x.Id == request.Id, cancellationToken).ConfigureAwait(false);
+            var target = await _unitOfWork.Repository.
+                GetSingleAsync<Vacations>(false, x => x.Id == request.Id, cancellationToken);
 
             if (target == null)
             {
@@ -122,8 +128,9 @@ namespace NetBlaze.Application.Services
             }
 
             target.SetIsDeletedToTrue();
+            target.ToggleIsActive();
 
-            var rows = await _unitOfWork.Repository.CompleteAsync(cancellationToken).ConfigureAwait(false);
+            var rows = await _unitOfWork.Repository.CompleteAsync(cancellationToken);
 
             if (rows > 0)
             {
@@ -133,16 +140,22 @@ namespace NetBlaze.Application.Services
             return ApiResponse<object>.ReturnSuccessResponse(null, Messages.SampleNotModified, HttpStatusCode.NotModified);
         }
 
+        #region HELPER
+
+       
         public async Task<ApiResponse<bool>> CheckIfTodayIsVacationAsync(CancellationToken cancellationToken = default)
         {
             var today = DateTime.UtcNow.Date;
-
-            var any = await _unitOfWork.Repository.AnyAsync<Vacations>(
-                x => x.DayDate.Date <= today && today < x.DayDate.AddDays(x.VacationDuration).Date,
+           
+            var any = await _unitOfWork.Repository
+                .AnyAsync<Vacations>(
+                x => x.DayDate.Date <= today &&
+                today < x.DayDate.AddDays(x.VacationDuration).Date,
                 cancellationToken
-            ).ConfigureAwait(false);
+            );
 
             return ApiResponse<bool>.ReturnSuccessResponse(any);
         }
+        #endregion
     }
 }

@@ -182,4 +182,7 @@
 	<data name="TodayIsVacation" xml:space="preserve">
     <value>اليوم اجازة</value>
   </data>
+	<data name="UserUpdated" xml:space="preserve">
+    <value>تم تحديث بيانات المستخدم</value>
+  </data>
 </root>

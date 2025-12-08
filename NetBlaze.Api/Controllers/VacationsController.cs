@@ -7,7 +7,7 @@ using NetBlaze.SharedKernel.HelperUtilities.General;
 
 namespace NetBlaze.Api.Controllers
 {
-    public class VacationsController : BaseNetBlazeController
+    public class VacationsController : BaseNetBlazeController, IVacationsService
     {
         private readonly IVacationsService _vacationsService;
 
@@ -16,48 +16,40 @@ namespace NetBlaze.Api.Controllers
             _vacationsService = vacationsService;
         }
 
-        [HttpGet]
-        public async Task<ApiResponse<List<VacationResponseDTO>>> GetAll(CancellationToken cancellationToken)
+        [HttpGet("Get-Vacations")]
+        public IEnumerable<VacationResponseDTO> GetListedVacations()
         {
-            var list = new List<VacationResponseDTO>();
-            await foreach (var item in _vacationsService.GetListedVacations().WithCancellation(cancellationToken))
-            {
-                list.Add(item);
-            }
-            return ApiResponse<List<VacationResponseDTO>>.ReturnSuccessResponse(list);
+            
+            return  _vacationsService.GetListedVacations();
         }
 
-        [HttpGet("{id:int}")]
-        public Task<ApiResponse<VacationResponseDTO>> GetById(int id, CancellationToken cancellationToken)
-        {
-            return _vacationsService.GetVacationByIdAsync(id, cancellationToken);
-        }
 
-        [HttpPost]
-        public Task<ApiResponse<VacationResponseDTO>> Create([FromBody] VacationRequestDTO request, CancellationToken cancellationToken)
+        [HttpPost()]
+        public Task<ApiResponse<VacationResponseDTO>> CreateVacationAsync([FromBody] VacationRequestDTO request, CancellationToken cancellationToken)
         {
             return _vacationsService.CreateVacationAsync(request, cancellationToken);
         }
 
-        [HttpPut("{id:int}")]
-        public Task<ApiResponse<object>> Update(int id, [FromBody] UpdateVacationRequestDTO request, CancellationToken cancellationToken)
+        [HttpPut]
+        public Task<ApiResponse<object>> UpdateVacationAsync([FromBody]UpdateVacationRequestDTO request, CancellationToken cancellationToken = default)
         {
-            request.Id = id;
+            request.Id = request.Id;
             return _vacationsService.UpdateVacationAsync(request, cancellationToken);
         }
 
-        [HttpDelete("{id:int}")]
-        [Authorize(Roles = "Admin,HR")]
-        public Task<ApiResponse<object>> Delete(int id, CancellationToken cancellationToken)
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin,HR")]//TODO:make it variable
+        public Task<ApiResponse<object>> DeleteVacationAsync(DeleteVacationRequestDTO request, CancellationToken cancellationToken = default)
         {
-            var request = new DeleteVacationRequestDTO { Id = id };
+            
             return _vacationsService.DeleteVacationAsync(request, cancellationToken);
         }
 
         [HttpGet("is-today")]
-        public Task<ApiResponse<bool>> IsTodayVacation(CancellationToken cancellationToken)
+        public Task<ApiResponse<bool>> CheckIfTodayIsVacationAsync(CancellationToken cancellationToken = default)
         {
             return _vacationsService.CheckIfTodayIsVacationAsync(cancellationToken);
         }
+
     }
 }

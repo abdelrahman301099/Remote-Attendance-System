@@ -57,5 +57,6 @@ namespace NetBlaze.SharedKernel.SharedResources
         public static string UserAlreadyDeleted => ResourceManager.GetString(nameof(UserAlreadyDeleted), resourceCulture)!;
 
         public static string TodayIsVacation => ResourceManager.GetString(nameof(TodayIsVacation), resourceCulture)!;
+        public static string UserUpdated => ResourceManager.GetString(nameof(UserUpdated), resourceCulture)!;
     }
 }

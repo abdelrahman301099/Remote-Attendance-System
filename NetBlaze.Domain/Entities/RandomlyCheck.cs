@@ -7,7 +7,7 @@ namespace NetBlaze.Domain.Entities
     {
         public int Status { get; set; }
 
-        public DateTime Time { get; set; }
+        public DateTime Time { get; set; } = DateTime.Now;
 
         public string Otp { get; set; }
 
@@ -15,9 +15,9 @@ namespace NetBlaze.Domain.Entities
 
         public DateTime ExpiredAt { get; set; }
 
-        public DateTime Date { get; set; }
+        public DateTime Date { get; set; } = DateTime.Now;
 
-        public int UserId { get; set; }
+        public long UserId { get; set; }
 
         public virtual User User { get; set; }
     }

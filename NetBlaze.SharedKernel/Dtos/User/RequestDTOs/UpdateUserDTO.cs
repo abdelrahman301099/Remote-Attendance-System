@@ -19,6 +19,10 @@ namespace NetBlaze.SharedKernel.Dtos.User.RequestDTOs
         public string? UserName { get; set; } = string.Empty;
 
         [Required(ErrorMessageResourceType = typeof(Messages), ErrorMessageResourceName = nameof(Messages.FieldRequired))]
+        [MaxLength(CommonStringLength.MediumText)]
+        public string? Displayname { get; set; } = string.Empty;
+
+        [Required(ErrorMessageResourceType = typeof(Messages), ErrorMessageResourceName = nameof(Messages.FieldRequired))]
         [RegularExpression(RegexTemplate.Email)]
         public string? UserEmail { get; set; }
     }

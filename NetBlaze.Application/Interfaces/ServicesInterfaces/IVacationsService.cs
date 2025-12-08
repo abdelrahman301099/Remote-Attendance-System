@@ -6,9 +6,7 @@ namespace NetBlaze.Application.Interfaces.ServicesInterfaces
 {
     public interface IVacationsService
     {
-        IAsyncEnumerable<VacationResponseDTO> GetListedVacations();
-
-        Task<ApiResponse<VacationResponseDTO>> GetVacationByIdAsync(int id, CancellationToken cancellationToken = default);
+        Task<ApiResponse< IQueryable<VacationResponseDTO>>> GetListedVacations(int pageNumber, int pageSize);
 
         Task<ApiResponse<VacationResponseDTO>> CreateVacationAsync(VacationRequestDTO request, CancellationToken cancellationToken = default);
 
