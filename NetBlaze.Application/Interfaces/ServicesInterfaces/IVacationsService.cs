@@ -15,5 +15,7 @@ namespace NetBlaze.Application.Interfaces.ServicesInterfaces
         Task<ApiResponse<object>> DeleteVacationAsync(DeleteVacationRequestDTO request, CancellationToken cancellationToken = default);
 
         Task<ApiResponse<bool>> CheckIfTodayIsVacationAsync(CancellationToken cancellationToken = default);
+
+        Task<ApiResponse<int>> ImportHolidaysFromIcsAsync(string icsUrl, CancellationToken cancellationToken = default);
     }
 }

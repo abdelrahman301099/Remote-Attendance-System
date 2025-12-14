@@ -28,7 +28,7 @@ namespace NetBlaze.Application.Services
                     Id = x.Id,
                     Name = x.Name,
                     WorkStartTime = x.WorkStartTime,
-                    WorkEndTime = x.WorkEndTime,
+                    MaxLate = x.MaxLate,
                     PolicyType = x.PolicyType.ToString(),
                     CriticalHours = x.CriticalHours,
                     Action = x.Action
@@ -47,7 +47,7 @@ namespace NetBlaze.Application.Services
                     Id = x.Id,
                     Name = x.Name,
                     WorkStartTime = x.WorkStartTime,
-                    WorkEndTime = x.WorkEndTime,
+                    MaxLate = x.MaxLate,
                     PolicyType = x.PolicyType.ToString(),
                     CriticalHours = x.CriticalHours,
                     Action = x.Action
@@ -69,7 +69,7 @@ namespace NetBlaze.Application.Services
             {
                 Name = request.Name,
                 WorkStartTime = request.WorkStartTime,
-                WorkEndTime = request.WorkEndTime,
+                MaxLate = request.MaxLate,
                 PolicyType = request.PolicyType,
                 CriticalHours = request.CriticalHours,
                 Action = request.Action
@@ -86,7 +86,7 @@ namespace NetBlaze.Application.Services
                     Id = entity.Id,
                     Name = entity.Name,
                     WorkStartTime = entity.WorkStartTime,
-                    WorkEndTime = entity.WorkEndTime,
+                    MaxLate = entity.MaxLate,
                     PolicyType = entity.PolicyType.ToString(),
                     CriticalHours = entity.CriticalHours,
                     Action = entity.Action
@@ -108,7 +108,7 @@ namespace NetBlaze.Application.Services
 
             if (!string.IsNullOrWhiteSpace(request.Name)) target.Name = request.Name;
             if (request.WorkStartTime.HasValue) target.WorkStartTime = request.WorkStartTime.Value;
-            if (request.WorkEndTime.HasValue) target.WorkEndTime = request.WorkEndTime.Value;
+            if (request.MaxLate.HasValue) target.MaxLate = request.MaxLate.Value;
             if (request.PolicyType.HasValue) target.PolicyType = request.PolicyType.Value;
             if (request.CriticalHours.HasValue) target.CriticalHours = request.CriticalHours.Value;
             if (request.Action.HasValue) target.Action = request.Action.Value;

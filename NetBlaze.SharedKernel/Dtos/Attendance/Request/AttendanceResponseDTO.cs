@@ -8,12 +8,9 @@ namespace NetBlaze.SharedKernel.Dtos.Attendance.Request
 
         public DateTime Date { get; set; } = DateTime.MinValue;
 
-        public DateTime Time { get; set; } 
+        public TimeOnly Time { get; set; } 
 
-        public int PolicyId { get; set; }
-
-        
-
+    
 
     }
 }

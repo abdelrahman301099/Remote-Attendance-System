@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Options;
 using NetBlaze.Application.Extensions;
 using NetBlaze.Infrastructure.Data.DatabaseContext;
 using NetBlaze.Infrastructure.Extensions;
@@ -45,6 +45,16 @@ namespace NetBlaze.Api.Extensions
             builder.Services.AddEndpointsApiExplorer();
 
             builder.Services.AddResponseCompression(options => options.EnableForHttps = true);
+
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+                options.AddPolicy("HRorAdmin", policy => policy.RequireRole("HR", "Admin"));
+                options.AddPolicy("CanManageVacations", policy => policy.RequireRole("HR", "Admin"));
+                options.AddPolicy("CanManageCompanyPolicies", policy => policy.RequireRole("HR", "Admin"));
+                options.AddPolicy("CanManageUsers", policy => policy.RequireRole("Admin"));
+                options.AddPolicy("CanViewReports", policy => policy.RequireRole("Admin", "HR"));
+            });
 
             builder.Services.AddCors(options =>
             {

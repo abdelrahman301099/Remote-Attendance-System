@@ -10,7 +10,6 @@ namespace NetBlaze.Application.Interfaces.ServicesInterfaces
 
         Task<ApiResponse<object>>  GetAllUsersAsync(int pageNumber,int pageSize );
 
-
         Task<ApiResponse<UserResponseDTO>> UpdateUserAsync(UpdateUserDTO updateUserDTO, CancellationToken cancellationToken);
     }
 }

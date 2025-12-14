@@ -7,9 +7,9 @@ namespace NetBlaze.Domain.Entities
     {
         public string Name { get; set; }
 
-        public DateTime WorkStartTime { get; set; }
+        public TimeOnly WorkStartTime { get; set; }
 
-        public DateTime WorkEndTime { get; set; }
+        public TimeOnly MaxLate { get; set; }
 
        public EPolicyType PolicyType { get; set; }
 

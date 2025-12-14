@@ -1,5 +1,4 @@
-using NetBlaze.SharedKernel.HelperUtilities.Constants;
-using NetBlaze.SharedKernel.SharedResources;
+﻿using NetBlaze.SharedKernel.SharedResources;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -7,25 +6,29 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NetBlaze.SharedKernel.Dtos.User.RequestDTOs
+namespace NetBlaze.SharedKernel.Dtos.Reports
 {
-    public class UpdateUserDTO
+    public class AppliedPolicyRequestDTO
     {
         [Required(ErrorMessageResourceType = typeof(Messages), ErrorMessageResourceName = nameof(Messages.FieldRequired))]
-        public string? UserId { get; set; }
+        public int AttendanceId { get; set; }
+
 
         [Required(ErrorMessageResourceType = typeof(Messages), ErrorMessageResourceName = nameof(Messages.FieldRequired))]
-        [MaxLength(CommonStringLength.MediumText)]
-        public string? UserName { get; set; } = string.Empty;
+        public int PolicyId { get; set; }
 
         [Required(ErrorMessageResourceType = typeof(Messages), ErrorMessageResourceName = nameof(Messages.FieldRequired))]
-        [MaxLength(CommonStringLength.MediumText)]
-        public string? Displayname { get; set; } = string.Empty;
+        public double Action { get; set; }
 
         [Required(ErrorMessageResourceType = typeof(Messages), ErrorMessageResourceName = nameof(Messages.FieldRequired))]
-        [RegularExpression(RegexTemplate.Email)]
-        public string? UserEmail { get; set; }
+        public int DeductionHours { get; set; }
 
-        public long? RoleId { get; set; }
+        [Required(ErrorMessageResourceType = typeof(Messages), ErrorMessageResourceName = nameof(Messages.FieldRequired))]
+        public bool IsApplied { get; set; }
+
+
+     
+
+
     }
 }

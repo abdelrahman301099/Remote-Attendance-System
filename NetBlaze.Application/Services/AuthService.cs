@@ -14,7 +14,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace NetBlaze.Application.Services
 {
-    //TODO:Cmplete Localization
+    
     public class AuthService : IAuthService
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -37,13 +37,13 @@ namespace NetBlaze.Application.Services
 
             if (user == null)
             {
-                return ApiResponse<LogInResponseDTO>.ReturnFailureResponse(Messages.AttendanceNotFound, HttpStatusCode.Unauthorized);
+                return ApiResponse<LogInResponseDTO>.ReturnFailureResponse(Messages.UserNotFound, HttpStatusCode.Unauthorized);
             }
 
             var validPassword = await _userManager.CheckPasswordAsync(user, logInRequestDto.Password);
             if (!validPassword)
             {
-                return ApiResponse<LogInResponseDTO>.ReturnFailureResponse(Messages.AttendanceNotFound, HttpStatusCode.Unauthorized);
+                return ApiResponse<LogInResponseDTO>.ReturnFailureResponse(Messages.InvalidPassword, HttpStatusCode.Unauthorized);
             }
             
             var roles = await _userManager.GetRolesAsync(user);
@@ -126,13 +126,5 @@ namespace NetBlaze.Application.Services
            
         }
 
-
-
-
-
-        public Task<ApiResponse<object>> UpdateUserAsync(UpdateUserRequestDTO updateUserRequestDto, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

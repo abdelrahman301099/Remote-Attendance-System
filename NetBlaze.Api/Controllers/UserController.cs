@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NetBlaze.Application.Interfaces.ServicesInterfaces;
 using NetBlaze.SharedKernel.Dtos.User.RequestDTOs;
@@ -15,6 +15,7 @@ namespace NetBlaze.Api.Controllers
             _userService = userService;
         }
 
+        [Authorize(Policy = "CanManageUsers")]
         [HttpDelete("{userId}")]
         public async Task<ApiResponse<bool>> DeleteUserAsync(long UserId, CancellationToken cancellationToken)
         {
@@ -22,11 +23,12 @@ namespace NetBlaze.Api.Controllers
         }
 
         [HttpGet]
-        public IAsyncEnumerable<UserResponseDTO> GetAllUsersAsync()
+       public async Task<ApiResponse<object>> GetAllUsersAsync(int pageNumber, int pageSize)
         {
-            return _userService.GetAllUsersAsync();
+            return await _userService.GetAllUsersAsync(pageNumber, pageSize);
         }
 
+        [Authorize(Policy = "HRorAdmin")]
         [HttpPut]
         public async Task<ApiResponse<UserResponseDTO>> UpdateUserAsync([FromBody]UpdateUserDTO updateUserDTO, CancellationToken cancellationToken)
         {

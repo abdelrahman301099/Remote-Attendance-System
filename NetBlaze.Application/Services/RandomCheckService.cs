@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using NetBlaze.Application.Interfaces.General;
 using NetBlaze.Application.Interfaces.ServicesInterfaces;
@@ -31,18 +32,16 @@ namespace NetBlaze.Application.Services
         {
             var user = await _unitOfWork.Repository.GetByIdAsync<User>(false, userId, cancellationToken);
             if (user == null)
-                return ApiResponse<RandomlyCheckResponseDTO>.ReturnFailureResponse(Messages.UserNotFound, HttpStatusCode.OK);
+                return ApiResponse<RandomlyCheckResponseDTO>.ReturnFailureResponse(Messages.UserNotFound, HttpStatusCode.NotFound);
 
             var OTP = GenerateSecureOtp(6);
-
-            var EXP = _configration.GetSection(OTP);
-
-            //var EXPInMin =EXP["ExpirationDeurationInMinutes"];
+            var expirationMinutesStr = _configration.GetSection("RandomCheck")["ExpirationDurationInMinutes"];
+            var expirationMinutes = int.TryParse(expirationMinutesStr, out var m) && m > 0 ? m : 30;
 
             var OtpRecord = new RandomlyCheck
             {
                 CreatedAt = DateTime.UtcNow,
-                ExpiredAt = DateTime.UtcNow.AddMinutes(30),
+                ExpiredAt = DateTime.UtcNow.AddMinutes(expirationMinutes),
                 UserId = userId,
                 Status = 0,
                 Otp = OTP
@@ -72,17 +71,32 @@ namespace NetBlaze.Application.Services
 
         public async Task<ApiResponse<bool>> OtpValidation(long userId,string otp, CancellationToken cancellationToken)
         {
-            var otpRow = await _unitOfWork.Repository.GetSingleAsync<RandomlyCheck>(true, x=> x.UserId == userId, cancellationToken);
+            var otpRow = await _unitOfWork
+                .Repository
+                .GetQueryable<RandomlyCheck>(x => x.UserId == userId)
+                .OrderByDescending(x => x.CreatedAt)
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
 
-            if (otpRow == null) 
-                ApiResponse<bool>.ReturnFailureResponse();
+            if (otpRow == null)
+            {
+                return ApiResponse<bool>.ReturnFailureResponse(Messages.ResetCodeExpiredOrNotFound, HttpStatusCode.NotFound);
+            }
 
             var result = CheckOtpRecord(otpRow, userId, otp);
 
             if (result)
-                return ApiResponse<bool>.ReturnSuccessResponse(true);
+            {
+                otpRow.Status = 1;
+                var saved = await _unitOfWork.Repository.CompleteAsync(cancellationToken).ConfigureAwait(false);
+                if (saved > 0)
+                {
+                    return ApiResponse<bool>.ReturnSuccessResponse(true);
+                }
+                return ApiResponse<bool>.ReturnFailureResponse(Messages.ErrorOccurredInServer, HttpStatusCode.InternalServerError);
+            }
 
-            return ApiResponse<bool>.ReturnFailureResponse();
+            return ApiResponse<bool>.ReturnFailureResponse(Messages.InvalidRequest, HttpStatusCode.BadRequest);
    
         }
 
@@ -111,7 +125,7 @@ namespace NetBlaze.Application.Services
 
             if(randomlyCheck.Status == 1) return false;
 
-            if(randomlyCheck.ExpiredAt >= DateTime.Now) return false;
+            if(DateTime.UtcNow >= randomlyCheck.ExpiredAt) return false;
 
             return true;
         }

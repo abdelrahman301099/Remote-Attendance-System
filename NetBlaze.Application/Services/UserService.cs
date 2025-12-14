@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using NetBlaze.Application.Interfaces.General;
 using NetBlaze.Application.Interfaces.ServicesInterfaces;
@@ -18,13 +18,13 @@ namespace NetBlaze.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<User> _user;
+        private readonly RoleManager<Role> _roleManager;
         
 
-        public UserService(UserManager<User> userManager, IUnitOfWork unitOfWork  ) {
-        
+        public UserService(UserManager<User> userManager, RoleManager<Role> roleManager, IUnitOfWork unitOfWork) {
             _unitOfWork = unitOfWork;
             _user = userManager;
-        
+            _roleManager = roleManager;
         }
 
         public async Task<ApiResponse<bool>> DeleteUserAsync(long userId, CancellationToken cancellationToken)
@@ -66,23 +66,61 @@ namespace NetBlaze.Application.Services
        
         public async Task<ApiResponse<UserResponseDTO>> UpdateUserAsync(UpdateUserDTO updateUserDTO, CancellationToken cancellationToken)
         {
-            var user = _unitOfWork.Repository.GetById<User>(false, updateUserDTO.UserId);
+            if (!long.TryParse(updateUserDTO.UserId, out var uid))
+            {
+                return ApiResponse<UserResponseDTO>.ReturnFailureResponse(Messages.InvalidRequest, HttpStatusCode.BadRequest);
+            }
+
+            var user = await _unitOfWork.Repository.GetByIdAsync<User>(false, uid, cancellationToken).ConfigureAwait(false);
 
             
             if (user == null)
                 return ApiResponse<UserResponseDTO>.ReturnFailureResponse(Messages.UserNotFound, HttpStatusCode.NotFound);
 
-            user.UserName = updateUserDTO.UserName;
-            user.DisplayName = updateUserDTO.Displayname;
-            user.Email = updateUserDTO.UserEmail;
+            user.UserName = updateUserDTO.UserName!;
+            user.DisplayName = updateUserDTO.Displayname!;
+            user.Email = updateUserDTO.UserEmail!;
 
-            await _unitOfWork.Repository.CompleteAsync();
+            var updateResult = await _user.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                var errors = updateResult.Errors.Select(e => e.Description).ToArray();
+                return ApiResponse<UserResponseDTO>.ReturnFailureResponse(Messages.ErrorOccurredInServer, HttpStatusCode.BadRequest, errors);
+            }
+
+            if (updateUserDTO.RoleId.HasValue)
+            {
+                var role = await _roleManager.FindByIdAsync(updateUserDTO.RoleId.Value.ToString());
+                if (role == null)
+                {
+                    return ApiResponse<UserResponseDTO>.ReturnFailureResponse("Invalid Role Id", HttpStatusCode.BadRequest);
+                }
+
+                var currentRoles = await _user.GetRolesAsync(user);
+                if (currentRoles.Any())
+                {
+                    var removeResult = await _user.RemoveFromRolesAsync(user, currentRoles);
+                    if (!removeResult.Succeeded)
+                    {
+                        var errs = removeResult.Errors.Select(e => e.Description).ToArray();
+                        return ApiResponse<UserResponseDTO>.ReturnFailureResponse(Messages.ErrorAssigningRole, HttpStatusCode.BadRequest, errs);
+                    }
+                }
+
+                var addResult = await _user.AddToRoleAsync(user, role.Name);
+                if (!addResult.Succeeded)
+                {
+                    var errs = addResult.Errors.Select(e => e.Description).ToArray();
+                    return ApiResponse<UserResponseDTO>.ReturnFailureResponse(Messages.ErrorAssigningRole, HttpStatusCode.BadRequest, errs);
+                }
+            }
 
             var NewUser = new UserResponseDTO
             {
                 UserName = updateUserDTO.UserName,
                 UserEmail = updateUserDTO.UserEmail,
-                DisplayName = updateUserDTO.Displayname
+                DisplayName = updateUserDTO.Displayname,
+                RoleId = updateUserDTO.RoleId ?? 0
 
             };
 
@@ -96,7 +134,7 @@ namespace NetBlaze.Application.Services
         {
             var usersList = _unitOfWork.Repository.GetQueryable<User>();
 
-            usersList.PaginatedListAsync(pageNumber, pageSize);
+           
 
             var users = usersList.Select(u => new UserResponseDTO
             {
@@ -105,7 +143,9 @@ namespace NetBlaze.Application.Services
                 UserEmail = u.Email
             });
 
-            return ApiResponse<object>.ReturnSuccessResponse(null, Messages.InvalidEmail, HttpStatusCode.OK);
+           var items = users.PaginatedListAsync(pageNumber, pageSize);
+
+            return ApiResponse<object>.ReturnSuccessResponse(items, "All Users" ,HttpStatusCode.OK);
         }
     }
 }

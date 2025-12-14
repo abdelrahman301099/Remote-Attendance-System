@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using NetBlaze.Application.Interfaces.General;
 using NetBlaze.Application.Interfaces.ServicesInterfaces;
 using NetBlaze.Domain.Entities;
+using NetBlaze.Domain.Entities.Identity;
 using NetBlaze.SharedKernel.Dtos.Attendance.Request;
 using NetBlaze.SharedKernel.Dtos.Attendance.Response;
 using NetBlaze.SharedKernel.HelperUtilities.General;
@@ -15,11 +17,13 @@ namespace NetBlaze.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IVacationsService _vacationsService;
+        private readonly UserManager<User> _userManager;
 
-        public AttendanceService(IUnitOfWork unitOfWork, IVacationsService vacationsService)
+        public AttendanceService(IUnitOfWork unitOfWork, IVacationsService vacationsService, UserManager<User> userManager)
         {
             _unitOfWork = unitOfWork;
             _vacationsService = vacationsService;
+            _userManager = userManager;
         }
 
         public IAsyncEnumerable<AttendanceResponseDTO> GetListedAttendance(AttendanceRequestDTO attendanceRequestDto)
@@ -35,9 +39,9 @@ namespace NetBlaze.Application.Services
                     x => new AttendanceResponseDTO
                     {
                         UserName = x.User.UserName,
-                        Date = x.Date,
-                        Time = x.Time,
-                        PolicyId = x.CompanyPolicyId
+                        Date = x.DayDate,
+                        Time = x.Time
+                       
                     }
                 );
 
@@ -54,14 +58,14 @@ namespace NetBlaze.Application.Services
                                                          Messages.TodayIsVacation,
                                                          HttpStatusCode.BadRequest);
             }
-
-            var user = await _unitOfWork.Repository.GetSingleAsync<Attendance>(true, x => x.UserId == request.UserId);
-                if (user == null)
+            
+            var user = await _userManager.FindByEmailAsync(request.Email);
+            if (user == null)
                 {
                     return ApiResponse<AttendanceResponseDTO>.ReturnFailureResponse(
                         Messages.UserNotFound, HttpStatusCode.NotFound);
                 }
-
+            
                 
                 var companyPolicyId = await GetUserPolicyByAttendanceAsync(user.Id, DateTime.Today,cancellationToken);
                 if (companyPolicyId == null)
@@ -70,25 +74,20 @@ namespace NetBlaze.Application.Services
                         Messages.CompanyPolicyNotAssignedToUser, HttpStatusCode.BadRequest);
                 }
 
-                var currentDateTime = DateTime.Now;
+                
+                
 
                 var attendance = new Attendance
                 {
                     UserId = user.Id,
-                    Time = currentDateTime,
-                    Date = currentDateTime.Date,
-                    CompanyPolicyId = companyPolicyId,
-                    CreatedAt = DateTimeOffset.UtcNow
                     
                 };
 
-                
                 var response = new AttendanceResponseDTO
                 {
-                    UserName = user.User.UserName,
-                    Date = attendance.Date,
+                    UserName = user.UserName,
+                    Date = attendance.DayDate,
                     Time = attendance.Time,
-                    PolicyId = companyPolicyId
                 };
 
 
@@ -98,10 +97,10 @@ namespace NetBlaze.Application.Services
 
             if (rows > 0)
             {
-                return ApiResponse<AttendanceResponseDTO>.ReturnSuccessResponse(null, Messages.AttendanceAddedSuccessfully);
+                return ApiResponse<AttendanceResponseDTO>.ReturnSuccessResponse(null, "Attendance added successfully");
             }
 
-            return ApiResponse<AttendanceResponseDTO>.ReturnFailureResponse(Messages.AttendanceAddFailed);
+            return ApiResponse<AttendanceResponseDTO>.ReturnFailureResponse("Attendance add failed");
 
         }
       
@@ -114,7 +113,7 @@ namespace NetBlaze.Application.Services
 
             if (target == null)
             {
-                return ApiResponse<object>.ReturnFailureResponse(Messages.AttendanceNotFound, HttpStatusCode.NotFound);
+                return ApiResponse<object>.ReturnFailureResponse("Attendance not found", HttpStatusCode.NotFound);
             }
 
             target.SetIsDeletedToTrue();
@@ -123,7 +122,7 @@ namespace NetBlaze.Application.Services
 
             if (rows > 0)
             {
-                return ApiResponse<object>.ReturnSuccessResponse(null, Messages.AttendanceDeletedSuccessfully, HttpStatusCode.OK);
+                return ApiResponse<object>.ReturnSuccessResponse(null, "Attendance deleted successfully");
             }
 
             return ApiResponse<object>.ReturnSuccessResponse(null, Messages.AttendanceNotModified, HttpStatusCode.NotModified);
@@ -141,42 +140,48 @@ namespace NetBlaze.Application.Services
                         Messages.AttendanceNotFound, HttpStatusCode.NotFound);
                 }
 
+                //var PolicyId = await GetUserPolicyByAttendanceAsync(Userid, DateTime.Today, cancellationToken);
+
                 var response = new AttendanceResponseDTO
                 {
                     UserName = userAttendance.User.UserName,
-                    Date = userAttendance.Date,
+                    Date = userAttendance.DayDate,
                     Time = userAttendance.Time,
-                    PolicyId = userAttendance.CompanyPolicyId
                 };
 
                 return ApiResponse<AttendanceResponseDTO>.ReturnSuccessResponse(response);
            
         }
 
-
+       
         //for help
         #region Helper
-        public async Task<int> GetUserPolicyByAttendanceAsync(int userId, DateTime date, CancellationToken cancellationToken = default)
+        public async Task<int> GetUserPolicyByAttendanceAsync(long userId, DateTime date, CancellationToken cancellationToken = default)
         {
             
-
+           
             var attendances = await _unitOfWork.Repository
                 .GetMultipleAsync<Attendance>(
                     true,
-                    x => x.UserId == userId && x.Date.Date == date.Date,
+                    x => x.UserId == userId && x.DayDate == date.Date,
                     cancellationToken: cancellationToken
                 );
 
+          
+            if (attendances == null || !attendances.Any())
+                return 1;
+
+           
             var first = attendances.OrderBy(x => x.Time).First();
 
-
+            
             var last = attendances.OrderBy(x => x.Time).Last();
 
-
+            
             var workedHours = (last.Time - first.Time).TotalHours;
             int roundedHours = (int)Math.Round(workedHours);
 
-
+            
             var policy = await _unitOfWork.Repository
                 .GetSingleAsync<CompanyPolicy>(
                     true,
@@ -184,33 +189,33 @@ namespace NetBlaze.Application.Services
                     cancellationToken: cancellationToken
                 );
 
-
+            
             return policy.Id;
         }
 
 
-        private double? CalculatePolicyAction(DateTime checkInTime, CompanyPolicy policy)
+        private double? CalculatePolicyAction(TimeOnly checkInTime, CompanyPolicy policy)
         {
+            
+            var checkInTimeOnly =  checkInTime;
+            var workStartTimeOnly = policy.MaxLate;
 
-            var checkInTimeOnly = checkInTime.TimeOfDay;
-            var workStartTimeOnly = policy.WorkStartTime.TimeOfDay;
-
-
+            
             var lateBy = checkInTimeOnly - workStartTimeOnly;
 
             if (lateBy.TotalMinutes <= 0)
             {
-
+                
                 return 0;
             }
 
             if (lateBy.TotalHours >= policy.CriticalHours)
             {
-
+                
                 return policy.Action;
             }
 
-
+            
             var proportionalAction = (lateBy.TotalHours / policy.CriticalHours) * policy.Action;
             return Math.Round(proportionalAction, 2);
         }

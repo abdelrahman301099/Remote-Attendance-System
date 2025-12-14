@@ -13,10 +13,12 @@ namespace NetBlaze.Application.Services
     public class VacationsService : IVacationsService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public VacationsService(IUnitOfWork unitOfWork)
+        public VacationsService(IUnitOfWork unitOfWork, IHttpClientFactory httpClientFactory)
         {
             _unitOfWork = unitOfWork;
+            _httpClientFactory = httpClientFactory;
         }
 
         public async Task<ApiResponse<IQueryable<VacationResponseDTO>>> GetListedVacations(int pageNumber, int pageSize)
@@ -140,9 +142,144 @@ namespace NetBlaze.Application.Services
             return ApiResponse<object>.ReturnSuccessResponse(null, Messages.SampleNotModified, HttpStatusCode.NotModified);
         }
 
+        public async Task<ApiResponse<int>> ImportHolidaysFromIcsAsync(string icsUrl, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(icsUrl))
+            {
+                return ApiResponse<int>.ReturnFailureResponse(Messages.InvalidRequest, HttpStatusCode.BadRequest);
+            }
+
+           
+                var client = _httpClientFactory.CreateClient();
+                using var response = await client.GetAsync(icsUrl, cancellationToken).ConfigureAwait(false);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return ApiResponse<int>.ReturnFailureResponse(Messages.ErrorOccurredInServer, HttpStatusCode.BadGateway);
+                }
+
+                var content = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+
+                var events = ParseIcs(content);
+
+                var added = 0;
+                foreach (var e in events)
+                {
+                    var exists = await _unitOfWork.Repository.AnyAsync<Vacations>(
+                        x => x.DayDate.Date == e.start.Date && x.DayName == e.summary,
+                        cancellationToken).ConfigureAwait(false);
+
+                    if (exists)
+                    {
+                        continue;
+                    }
+
+                    var entity = new Vacations
+                    {
+                        DayName = e.summary,
+                        DayDate = e.start.Date,
+                        VacationDuration = Math.Max(1, (int)Math.Ceiling((e.end.Date - e.start.Date).TotalDays)),
+                        Clarification = e.summary
+                    };
+
+                    await _unitOfWork.Repository.AddAsync<Vacations, int>(entity, cancellationToken).ConfigureAwait(false);
+                    added++;
+                }
+
+                if (added == 0)
+                {
+                    return ApiResponse<int>.ReturnSuccessResponse(0, Messages.SampleNotModified);
+                }
+
+                var rows = await _unitOfWork.Repository.CompleteAsync(cancellationToken).ConfigureAwait(false);
+
+                return ApiResponse<int>.ReturnSuccessResponse(rows, Messages.SampleAddedSuccessfully);
+            
+        }
+
+        private static List<(string summary, DateTime start, DateTime end)> ParseIcs(string ics)
+        {
+            var list = new List<(string summary, DateTime start, DateTime end)>();
+            string? summary = null;
+            DateTime? dtStart = null;
+            DateTime? dtEnd = null;
+
+            using var reader = new StringReader(ics);
+            string? line;
+            while ((line = reader.ReadLine()) != null)
+            {
+                if (line.StartsWith("BEGIN:VEVENT", StringComparison.OrdinalIgnoreCase))
+                {
+                    summary = null;
+                    dtStart = null;
+                    dtEnd = null;
+                    continue;
+                }
+
+                if (line.StartsWith("END:VEVENT", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (summary != null && dtStart.HasValue)
+                    {
+                        var start = dtStart.Value;
+                        var end = dtEnd ?? start.AddDays(1);
+                        list.Add((summary, start, end));
+                    }
+                    summary = null;
+                    dtStart = null;
+                    dtEnd = null;
+                    continue;
+                }
+
+                if (line.StartsWith("SUMMARY:", StringComparison.OrdinalIgnoreCase))
+                {
+                    summary = line.Substring("SUMMARY:".Length).Trim();
+                    continue;
+                }
+
+                if (line.StartsWith("DTSTART", StringComparison.OrdinalIgnoreCase))
+                {
+                    var value = ExtractDateValue(line);
+                    dtStart = value;
+                    continue;
+                }
+
+                if (line.StartsWith("DTEND", StringComparison.OrdinalIgnoreCase))
+                {
+                    var value = ExtractDateValue(line);
+                    dtEnd = value;
+                    continue;
+                }
+            }
+
+            return list;
+        }
+
+        private static DateTime ExtractDateValue(string line)
+        {
+            var idx = line.IndexOf(":", StringComparison.Ordinal);
+            var raw = idx >= 0 ? line[(idx + 1)..].Trim() : string.Empty;
+
+            if (DateTime.TryParseExact(raw, "yyyyMMdd", null, System.Globalization.DateTimeStyles.AssumeUniversal, out var dateOnly))
+            {
+                return dateOnly;
+            }
+
+            if (DateTime.TryParseExact(raw, "yyyyMMdd'T'HHmmss'Z'", null, System.Globalization.DateTimeStyles.AdjustToUniversal, out var dateTimeUtc))
+            {
+                return dateTimeUtc;
+            }
+
+            if (DateTime.TryParse(raw, out var general))
+            {
+                return general;
+            }
+
+            return DateTime.UtcNow.Date;
+        }
+
         #region HELPER
 
-       
+
         public async Task<ApiResponse<bool>> CheckIfTodayIsVacationAsync(CancellationToken cancellationToken = default)
         {
             var today = DateTime.UtcNow.Date;
@@ -157,5 +294,7 @@ namespace NetBlaze.Application.Services
             return ApiResponse<bool>.ReturnSuccessResponse(any);
         }
         #endregion
+
+       
     }
 }
