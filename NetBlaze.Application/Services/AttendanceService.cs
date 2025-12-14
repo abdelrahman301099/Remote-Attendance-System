@@ -80,7 +80,8 @@ namespace NetBlaze.Application.Services
                 var attendance = new Attendance
                 {
                     UserId = user.Id,
-                    
+                    DayDate = DateTime.Today,
+                    Time = TimeOnly.FromDateTime(DateTime.Now)
                 };
 
                 var response = new AttendanceResponseDTO
@@ -196,12 +197,8 @@ namespace NetBlaze.Application.Services
 
         private double? CalculatePolicyAction(TimeOnly checkInTime, CompanyPolicy policy)
         {
-            
-            var checkInTimeOnly =  checkInTime;
-            var workStartTimeOnly = policy.MaxLate;
-
-            
-            var lateBy = checkInTimeOnly - workStartTimeOnly;
+            var allowedStart = policy.WorkStartTime.Add(policy.MaxLate.ToTimeSpan());
+            var lateBy = checkInTime - allowedStart;
 
             if (lateBy.TotalMinutes <= 0)
             {
@@ -218,6 +215,25 @@ namespace NetBlaze.Application.Services
             
             var proportionalAction = (lateBy.TotalHours / policy.CriticalHours) * policy.Action;
             return Math.Round(proportionalAction, 2);
+        }
+
+        private double EvaluateCheckOutPolicy(TimeOnly checkOut, CompanyPolicy policy)
+        {
+            var expectedEnd = policy.WorkStartTime.Add(TimeSpan.FromHours(policy.CriticalHours));
+            var earlyBy = expectedEnd - checkOut;
+
+            if (earlyBy.TotalMinutes <= 0)
+            {
+                return 0;
+            }
+
+            if (earlyBy.TotalHours >= policy.CriticalHours)
+            {
+                return policy.Action;
+            }
+
+            var proportional = (earlyBy.TotalHours / policy.CriticalHours) * policy.Action;
+            return Math.Round(proportional, 2);
         }
         #endregion
 
