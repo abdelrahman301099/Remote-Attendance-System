@@ -8,6 +8,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NetBlaze.Ui.Client\NetBlaze.Ui.Client.csproj" />
+    <PackageReference Include="Fido2" Version="3.0.1" />
+    <PackageReference Include="Fido2.Models" Version="3.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.17" />
   </ItemGroup>
 

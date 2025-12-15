@@ -1,4 +1,4 @@
-﻿using Blazored.LocalStorage;
+using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
 using NetBlaze.SharedKernel.HelperUtilities.Constants;
@@ -38,6 +38,7 @@ namespace NetBlaze.Ui.Client.Extensions
             // ADD BLAZOR SERVICES HERE:
 
             services.AddScoped<BlazSampleService>();
+            services.AddScoped<FidoClientService>();
         }
 
         public static async Task ConsumeClientServicesAsync(this WebAssemblyHost app)

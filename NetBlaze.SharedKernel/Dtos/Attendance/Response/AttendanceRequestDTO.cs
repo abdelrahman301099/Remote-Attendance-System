@@ -1,4 +1,4 @@
-﻿
+
 
 namespace NetBlaze.SharedKernel.Dtos.Attendance.Response
 {
@@ -9,5 +9,7 @@ namespace NetBlaze.SharedKernel.Dtos.Attendance.Response
         public string? Email { get; set; }= null;
 
         public int? UserId { get; set; }
+
+        public string? FidoAssertionJson { get; set; }
     }
 }

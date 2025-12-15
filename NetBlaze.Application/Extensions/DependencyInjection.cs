@@ -22,6 +22,8 @@ namespace NetBlaze.Application.Extensions
             builder.Services.AddScoped<IRandomCheckService, RandomCheckService>();
             builder.Services.AddScoped<IReportsService, ReportsService>();
             builder.Services.AddScoped<IAppliedPolicyService, AppliedPolicyService>();
+            builder.Services.AddScoped<IFido2Service, Fido2Service>();
+            builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 
 
         }

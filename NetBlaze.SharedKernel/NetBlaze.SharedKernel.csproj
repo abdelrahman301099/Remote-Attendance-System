@@ -7,6 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Fido2" Version="3.0.1" />
+    <PackageReference Include="Fido2.Models" Version="3.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Update="SharedResources\Messages.ar-EG.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>

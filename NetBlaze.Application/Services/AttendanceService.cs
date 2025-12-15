@@ -18,12 +18,14 @@ namespace NetBlaze.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IVacationsService _vacationsService;
         private readonly UserManager<User> _userManager;
+        private readonly IFido2Service _fido2Service;
 
-        public AttendanceService(IUnitOfWork unitOfWork, IVacationsService vacationsService, UserManager<User> userManager)
+        public AttendanceService(IUnitOfWork unitOfWork, IVacationsService vacationsService, UserManager<User> userManager, IFido2Service fido2Service)
         {
             _unitOfWork = unitOfWork;
             _vacationsService = vacationsService;
             _userManager = userManager;
+            _fido2Service = fido2Service;
         }
 
         public IAsyncEnumerable<AttendanceResponseDTO> GetListedAttendance(AttendanceRequestDTO attendanceRequestDto)
@@ -65,14 +67,18 @@ namespace NetBlaze.Application.Services
                     return ApiResponse<AttendanceResponseDTO>.ReturnFailureResponse(
                         Messages.UserNotFound, HttpStatusCode.NotFound);
                 }
+            if (string.IsNullOrEmpty(request.FidoAssertionJson))
+            {
+                return ApiResponse<AttendanceResponseDTO>.ReturnFailureResponse("Missing FIDO2 assertion", HttpStatusCode.BadRequest);
+            }
+            var fidoResult = await _fido2Service.ValidateAssertionForUserAsync(user.Email!, request.FidoAssertionJson, cancellationToken);
+            if (!fidoResult.Success || fidoResult.Data == false)
+            {
+                return ApiResponse<AttendanceResponseDTO>.ReturnFailureResponse("FIDO2 validation failed", HttpStatusCode.Forbidden);
+            }
             
                 
                 var companyPolicyId = await GetUserPolicyByAttendanceAsync(user.Id, DateTime.Today,cancellationToken);
-                if (companyPolicyId == null)
-                {
-                    return ApiResponse<AttendanceResponseDTO>.ReturnFailureResponse(
-                        Messages.CompanyPolicyNotAssignedToUser, HttpStatusCode.BadRequest);
-                }
 
                 
                 

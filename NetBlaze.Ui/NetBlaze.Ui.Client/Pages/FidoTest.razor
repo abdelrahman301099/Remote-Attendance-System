@@ -1,0 +1,16 @@
+@page "/fido-test"
+
+<h3>FIDO2 Test</h3>
+
+<div>
+    <label>Email</label>
+    <input @bind="email" />
+</div>
+
+<div style="margin-top:12px">
+    <button @onclick="RegisterDevice">Register Device</button>
+    <button @onclick="VerifyDevice">Verify Device</button>
+    <button @onclick="CreateAttendance">Create Attendance</button>
+</div>
+
+<p>@status</p>
